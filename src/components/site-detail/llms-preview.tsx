@@ -33,19 +33,21 @@ export function LlmsPreview({ llmsTxt, isRecrawling, onRecrawl }: LlmsPreviewPro
 
   return (
     <Card>
-      <CardHeader className="sticky top-14 z-10 flex-row items-center gap-2 space-y-0 bg-card pb-3 border-b rounded-t-lg">
-        <Button variant="outline" size="sm" onClick={handleCopy}>
-          <Copy className="h-4 w-4" />
-          Copy
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleDownload}>
-          <Download className="h-4 w-4" />
-          Download
-        </Button>
-        <Button variant="outline" size="sm" disabled={isRecrawling} onClick={onRecrawl}>
-          {isRecrawling ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          {isRecrawling ? "Crawling…" : "Re-crawl"}
-        </Button>
+      <CardHeader className="sticky top-14 z-10 bg-card pb-3 border-b rounded-t-lg">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleCopy}>
+            <Copy className="h-4 w-4" />
+            Copy
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDownload}>
+            <Download className="h-4 w-4" />
+            Download
+          </Button>
+          <Button variant="outline" size="sm" disabled={isRecrawling} onClick={onRecrawl}>
+            {isRecrawling ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {isRecrawling ? "Crawling…" : "Re-crawl"}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="pt-4">
         <Tabs defaultValue="preview">

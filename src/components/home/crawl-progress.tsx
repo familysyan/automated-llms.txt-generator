@@ -41,7 +41,7 @@ export function CrawlProgress({ url, pages, totalEstimate, onCancel }: CrawlProg
             {pages.map((page, i) => (
               <div
                 key={page.url}
-                className="flex items-center gap-3 py-1.5 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                className="flex items-center gap-2 py-1.5 animate-in fade-in slide-in-from-bottom-2 duration-300 sm:gap-3"
                 style={{ animationDelay: `${i * 50}ms` }}
               >
                 {page.status === "done" && <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />}
@@ -51,22 +51,23 @@ export function CrawlProgress({ url, pages, totalEstimate, onCancel }: CrawlProg
                   <p className="text-sm font-medium truncate">
                     {page.title ?? page.url}
                   </p>
-                  <p className="font-mono text-xs text-muted-foreground truncate">
+                  <p className="font-mono text-xs text-muted-foreground truncate hidden sm:block">
                     {page.url}
                   </p>
                 </div>
-                <Badge variant="outline" className="shrink-0 text-xs">
-                  depth {page.depth}
+                <Badge variant="outline" className="shrink-0 text-xs hidden sm:inline-flex">
+                  d:{page.depth}
                 </Badge>
               </div>
             ))}
           </div>
 
-          <div className="flex items-center justify-between border-t pt-4">
-            <div className="flex gap-6 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-3 border-t pt-4">
+            <div className="flex gap-4 text-sm text-muted-foreground sm:gap-6">
               <span><span className="font-semibold text-foreground">{pages.length}</span> pages found</span>
               <span><span className="font-semibold text-foreground">{Math.max(...pages.map(p => p.depth), 0)}</span> max depth</span>
             </div>
+            <div className="flex-1" />
             <Button variant="ghost" size="sm" onClick={onCancel}>
               <X className="h-4 w-4" />
               Cancel

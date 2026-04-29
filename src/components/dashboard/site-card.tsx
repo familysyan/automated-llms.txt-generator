@@ -27,7 +27,7 @@ function timeAgo(dateStr: string): string {
 function MonitorBadge({ site }: { site: Site }) {
   if (!site.monitor) {
     return (
-      <Badge variant="secondary" className="gap-1.5">
+      <Badge variant="secondary" className="shrink-0 gap-1.5">
         <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
         Not monitored
       </Badge>
@@ -35,16 +35,16 @@ function MonitorBadge({ site }: { site: Site }) {
   }
   if (site.monitor.lastChangeAt) {
     return (
-      <Badge variant="outline" className="gap-1.5 text-amber-600 dark:text-amber-400">
+      <Badge variant="outline" className="shrink-0 gap-1.5 text-amber-600 dark:text-amber-400">
         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
         Changes detected
       </Badge>
     );
   }
   return (
-    <Badge variant="default" className="gap-1.5">
+    <Badge variant="default" className="shrink-0 gap-1.5">
       <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
-      Monitoring ({site.monitor.interval})
+      Monitored {site.monitor.interval}
     </Badge>
   );
 }
@@ -54,10 +54,10 @@ export function SiteCard({ site, isRecrawling, onRecrawl, onDelete }: SiteCardPr
     <Link href={`/site/${site.id}`} className="block">
       <Card className="hover:shadow-md transition-shadow duration-200 cursor-pointer">
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between">
-            <div className="min-w-0">
-              <CardTitle className="truncate">{site.name ?? new URL(site.url).hostname}</CardTitle>
-              <p className="mt-1 truncate font-mono text-sm text-muted-foreground">{site.url}</p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="truncate text-base">{site.name ?? new URL(site.url).hostname}</CardTitle>
+              <p className="mt-1 truncate font-mono text-xs text-muted-foreground">{site.url}</p>
             </div>
             <MonitorBadge site={site} />
           </div>

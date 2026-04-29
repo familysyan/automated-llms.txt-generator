@@ -36,15 +36,15 @@ export function LlmsResult({ url, llmsTxt, pagesFound, elapsed, onRecrawl }: Llm
 
   return (
     <div className="py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <p className="mb-6 text-sm text-muted-foreground">
+      <p className="mb-6 text-sm text-muted-foreground break-words">
         Crawled <span className="font-semibold text-foreground">{pagesFound}</span> pages from{" "}
-        <span className="font-mono">{url}</span> in{" "}
+        <span className="font-mono break-all">{url}</span> in{" "}
         <span className="font-semibold text-foreground">{elapsed}s</span>
       </p>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-          <div className="flex items-center gap-2">
+        <CardHeader className="space-y-3 pb-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleCopy}>
               <Copy className="h-4 w-4" />
               Copy
@@ -57,13 +57,14 @@ export function LlmsResult({ url, llmsTxt, pagesFound, elapsed, onRecrawl }: Llm
               <RefreshCw className="h-4 w-4" />
               Re-crawl
             </Button>
+            <div className="flex-1" />
+            <Link href="/dashboard">
+              <Button size="sm">
+                <Bell className="h-4 w-4" />
+                Dashboard
+              </Button>
+            </Link>
           </div>
-          <Link href="/dashboard">
-            <Button size="sm">
-              <Bell className="h-4 w-4" />
-              Monitor this site
-            </Button>
-          </Link>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="preview">

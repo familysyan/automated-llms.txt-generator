@@ -49,9 +49,9 @@ export function SiteDetail({ siteId }: SiteDetailProps) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">{site.name ?? new URL(site.url).hostname}</h1>
-        <p className="mt-1 font-mono text-sm text-muted-foreground">{site.url}</p>
+      <div className="mb-6 min-w-0">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl truncate">{site.name ?? new URL(site.url).hostname}</h1>
+        <p className="mt-1 font-mono text-xs text-muted-foreground truncate sm:text-sm">{site.url}</p>
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
