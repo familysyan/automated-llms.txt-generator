@@ -1,0 +1,102 @@
+---
+description: Error handling patterns for frontend and API routes — never expose raw errors to users
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Error Handling
+
+Never show raw errors, stack traces, or technical details to users. All errors surface through a friendly UI.
+
+## Frontend: React Error Boundary
+
+Wrap the app in an error boundary that catches unexpected render errors and shows a full-page fallback.
+
+```tsx
+// ✅ Error boundary catches crashes
+<ErrorBoundary>
+  <Dashboard />
+</ErrorBoundary>
+
+// ❌ Never let errors bubble to a white screen or console dump
+```
+
+The fallback UI:
+- Centered card with an icon
+- Heading: "Something went wrong"
+- Body: "We're sorry — something unexpected happened. Please try again later."
+- A "Go home" button that navigates to `/`
+- No stack trace, no error code, no technical jargon
+
+## Frontend: Async Operations
+
+All async operations (fetches, mutations) must be wrapped in try/catch. On failure, show a toast — never `console.error` and move on silently, and never show the raw error message.
+
+```tsx
+// ✅
+try {
+  await submitCrawl(url);
+} catch {
+  toast.error("Something went wrong. Please try again later.");
+}
+
+// ❌ Exposing raw error
+try {
+  await submitCrawl(url);
+} catch (err) {
+  toast.error(err.message);
+}
+
+// ❌ Silent failure
+try {
+  await submitCrawl(url);
+} catch (err) {
+  console.error(err);
+}
+```
+
+## API Routes: Response Format
+
+API routes return structured JSON errors with appropriate HTTP status codes. The `error` field is always a user-safe message — log the real error server-side.
+
+```tsx
+// ✅ API route error handling
+try {
+  const result = await doSomething();
+  return Response.json(result);
+} catch (err) {
+  console.error("doSomething failed:", err);
+  return Response.json(
+    { error: "Something went wrong. Please try again later." },
+    { status: 500 }
+  );
+}
+```
+
+Use specific status codes with safe messages:
+
+| Status | When                        | Message                                              |
+| ------ | --------------------------- | ---------------------------------------------------- |
+| 400    | Validation failure          | Describe what's wrong (e.g. "Please enter a valid URL") |
+| 404    | Resource not found          | "The requested resource was not found."              |
+| 409    | Conflict                    | "This resource already exists."                      |
+| 500    | Unexpected server error     | "Something went wrong. Please try again later."      |
+
+400-level errors may include a specific user-facing message since the user can fix them. 500-level errors must always use the generic message.
+
+## Frontend: API Response Handling
+
+When calling API routes, check the response status and extract the safe error message.
+
+```tsx
+// ✅
+const res = await fetch("/api/crawl", { method: "POST", body });
+if (!res.ok) {
+  const { error } = await res.json();
+  toast.error(error);
+  return;
+}
+
+// ❌ Showing status codes or response text to users
+toast.error(`Error ${res.status}: ${res.statusText}`);
+```
