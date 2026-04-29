@@ -1,0 +1,97 @@
+---
+description: Frontend architecture patterns for Next.js pages and React components
+globs: src/**/*.tsx
+alwaysApply: false
+---
+
+# Frontend Architecture
+
+## Route → Page → Component
+
+A route's `page.tsx` is a thin shell. It imports and mounts a single main component.
+
+```tsx
+// ✅ src/app/dashboard/page.tsx
+import { Dashboard } from "@/components/dashboard/dashboard";
+
+export default function DashboardPage() {
+  return <Dashboard />;
+}
+```
+
+```tsx
+// ❌ Don't put logic, state, or fetching in page files
+export default function DashboardPage() {
+  const [sites, setSites] = useState([]);
+  useEffect(() => { fetch("/api/sites")... }, []);
+  return <div>{sites.map(...)}</div>;
+}
+```
+
+## MVC Component Pattern
+
+The main component is the **controller**. It manages state, handles events, and passes data down to **view** components. View components are presentational -- they render based on props, nothing else.
+
+```
+src/components/dashboard/
+├── dashboard.tsx          # Controller: state, queries, event handlers
+├── site-card.tsx          # View: renders a single site card from props
+├── site-grid.tsx          # View: renders the card grid layout
+└── use-dashboard.ts       # Model: custom hook for data fetching + mutations
+```
+
+- **Controller** (`dashboard.tsx`): Calls hooks, holds UI state, wires event handlers, composes views.
+- **Model** (`use-dashboard.ts`): Custom hook wrapping TanStack Query calls. Returns data + mutation functions.
+- **Views** (`site-card.tsx`, `site-grid.tsx`): Receive props, render UI. No `useQuery`, no `fetch`, no business logic.
+
+## Server vs Client Components
+
+Components are server components by default in App Router. Only add `"use client"` when the component needs:
+- `useState`, `useEffect`, `useRef`, or other React hooks
+- Browser APIs (`window`, `localStorage`, `IntersectionObserver`)
+- Event handlers (`onClick`, `onChange`, `onSubmit`)
+- TanStack Query hooks
+
+Keep `"use client"` boundaries as low in the tree as possible.
+
+## Styling
+
+Use Tailwind utility classes for all styling. No inline `style={{}}` props. For complex or reusable styles, extract to CSS files using `@apply` or plain CSS with class names.
+
+```tsx
+// ✅ Tailwind classes
+<div className="flex items-center gap-4 rounded-lg border p-4">
+
+// ✅ CSS module or global class for complex/reused styles
+<div className={styles.diffView}>
+
+// ❌ No inline styles
+<div style={{ display: "flex", gap: "1rem" }}>
+```
+
+## File Naming
+
+- Files and folders: `kebab-case` (`site-card.tsx`, `use-dashboard.ts`)
+- Components: `PascalCase` exports (`export function SiteCard`)
+- Hooks: `camelCase` with `use` prefix (`export function useDashboard`)
+
+## TypeScript
+
+- No `any`. Use `unknown` and narrow, or define proper types.
+- Shared types go in `src/types/`.
+- Co-locate component prop types in the same file.
+
+```tsx
+interface SiteCardProps {
+  site: Site;
+  onRecrawl: (id: string) => void;
+}
+
+export function SiteCard({ site, onRecrawl }: SiteCardProps) {
+```
+
+## State Management
+
+- **Server state**: TanStack Query (`useQuery`, `useMutation`). Never store fetched data in `useState`.
+- **UI state**: React `useState` for local concerns (open/closed, selected tab, form inputs).
+- **No global state library** in v1. Prop-drill or lift state to the nearest shared parent.
