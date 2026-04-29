@@ -2,59 +2,65 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { fakeSites } from "@/lib/fake-data";
+import { useSites, useDeleteSite, useRecrawl } from "@/hooks/use-sites";
 import { Badge } from "@/components/ui/badge";
 import { SiteCard } from "./site-card";
-import type { Site } from "@/types";
+import { Loader2 } from "lucide-react";
 
 export function Dashboard() {
-  const [sites, setSites] = useState<Site[]>(fakeSites);
+  const { data: sites, isLoading } = useSites();
+  const deleteSite = useDeleteSite();
+  const recrawl = useRecrawl();
   const [recrawlingIds, setRecrawlingIds] = useState<Set<string>>(new Set());
 
-  const handleRecrawl = (siteId: string) => {
+  const handleRecrawl = async (siteId: string) => {
     setRecrawlingIds((prev) => new Set(prev).add(siteId));
-
-    setTimeout(() => {
-      setSites((prev) =>
-        prev.map((s) =>
-          s.id === siteId && s.lastCrawl
-            ? {
-                ...s,
-                updatedAt: new Date().toISOString(),
-                lastCrawl: {
-                  ...s.lastCrawl,
-                  startedAt: new Date().toISOString(),
-                  completedAt: new Date().toISOString(),
-                },
-              }
-            : s
-        )
-      );
+    try {
+      await recrawl.mutateAsync(siteId);
+      toast.success("Crawl completed");
+    } catch {
+      toast.error("Something went wrong. Please try again later.");
+    } finally {
       setRecrawlingIds((prev) => {
         const next = new Set(prev);
         next.delete(siteId);
         return next;
       });
-      toast.success("Crawl completed");
-    }, 2000);
+    }
   };
 
-  const handleDelete = (siteId: string) => {
-    setSites((prev) => prev.filter((s) => s.id !== siteId));
-    toast.success("Site deleted");
+  const handleDelete = async (siteId: string) => {
+    try {
+      await deleteSite.mutateAsync(siteId);
+      toast.success("Site deleted");
+    } catch {
+      toast.error("Something went wrong. Please try again later.");
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  const siteList = sites ?? [];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <div className="mb-6 flex items-center gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Your Sites</h1>
-        <Badge variant="secondary">{sites.length}</Badge>
+        <Badge variant="secondary">{siteList.length}</Badge>
       </div>
-      {sites.length === 0 ? (
+      {siteList.length === 0 ? (
         <EmptyState />
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {sites.map((site, i) => (
+          {siteList.map((site, i) => (
             <div
               key={site.id}
               className="animate-in fade-in slide-in-from-bottom-4 duration-500"

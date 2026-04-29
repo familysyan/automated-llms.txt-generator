@@ -4,68 +4,61 @@ import { useState } from "react";
 import { UrlInput } from "./url-input";
 import { CrawlProgress } from "./crawl-progress";
 import { LlmsResult } from "./llms-result";
-import { fakeCrawlProgress, fakeSites } from "@/lib/fake-data";
-import type { CrawlProgressEvent } from "@/types";
-
-type Phase = "input" | "crawling" | "result";
+import { useCrawl } from "@/hooks/use-crawl";
 
 export function Home() {
-  const [phase, setPhase] = useState<Phase>("input");
+  const crawl = useCrawl();
   const [url, setUrl] = useState("");
-  const [pages, setPages] = useState<CrawlProgressEvent[]>([]);
 
   const handleGenerate = (submittedUrl: string) => {
     setUrl(submittedUrl);
-    setPhase("crawling");
-    setPages([]);
-
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < fakeCrawlProgress.length) {
-        const page = fakeCrawlProgress[i];
-        i++;
-        setPages((prev) => [...prev, page]);
-      } else {
-        clearInterval(interval);
-        setTimeout(() => setPhase("result"), 500);
-      }
-    }, 400);
-  };
-
-  const handleCancel = () => {
-    setPhase("result");
+    crawl.startCrawl(submittedUrl);
   };
 
   const handleReset = () => {
-    setPhase("input");
     setUrl("");
-    setPages([]);
+    crawl.reset();
   };
 
-  const sampleSite = fakeSites[0];
-  const llmsTxt = sampleSite.lastCrawl?.llmsTxt ?? "";
+  const isCrawling = crawl.crawlId !== null && !crawl.isComplete && !crawl.error;
+  const hasResult = crawl.isComplete && crawl.result;
+  const isInput = !crawl.crawlId && !crawl.error;
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
-      {phase === "input" && <UrlInput onGenerate={handleGenerate} />}
+      {isInput && <UrlInput onGenerate={handleGenerate} />}
 
-      {phase === "crawling" && (
+      {isCrawling && (
         <CrawlProgress
           url={url}
-          pages={pages}
-          totalEstimate={fakeCrawlProgress.length}
-          onCancel={handleCancel}
+          pages={crawl.pages}
+          totalEstimate={Math.max(crawl.pagesFound, crawl.pages.length)}
+          onCancel={crawl.cancel}
         />
       )}
 
-      {phase === "result" && (
+      {hasResult && (
         <LlmsResult
           url={url}
-          llmsTxt={llmsTxt}
-          pagesFound={sampleSite.lastCrawl?.pagesFound ?? 0}
-          elapsed={12}
+          llmsTxt={crawl.result!.llmsTxt ?? ""}
+          pagesFound={crawl.totalPages}
+          elapsed={crawl.elapsed}
           onRecrawl={handleReset}
         />
+      )}
+
+      {crawl.error && (
+        <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center">
+          <div className="text-center space-y-4">
+            <p className="text-sm text-muted-foreground">{crawl.error}</p>
+            <button
+              onClick={handleReset}
+              className="text-sm text-primary underline underline-offset-4"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

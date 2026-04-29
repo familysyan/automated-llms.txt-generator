@@ -2,36 +2,50 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { getSiteById, getMonitorChecks } from "@/lib/fake-data";
+import { useSite } from "@/hooks/use-sites";
+import { apiFetch } from "@/lib/api";
 import { LlmsPreview } from "./llms-preview";
 import { MonitorPanel } from "./monitor-panel";
+import { Loader2 } from "lucide-react";
 
 interface SiteDetailProps {
   siteId: string;
 }
 
 export function SiteDetail({ siteId }: SiteDetailProps) {
-  const site = getSiteById(siteId);
+  const { data: site, isLoading } = useSite(siteId);
   const [isRecrawling, setIsRecrawling] = useState(false);
 
-  const handleRecrawl = () => {
+  const handleRecrawl = async () => {
     setIsRecrawling(true);
-    setTimeout(() => {
-      setIsRecrawling(false);
+    try {
+      await apiFetch(`/api/sites/${siteId}/recrawl`, { method: "POST" });
       toast.success("Crawl completed");
-    }, 2000);
+    } catch {
+      toast.error("Something went wrong. Please try again later.");
+    } finally {
+      setIsRecrawling(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
 
   if (!site) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-12 text-center sm:px-6">
         <h1 className="text-2xl font-semibold">Site not found</h1>
-        <p className="mt-2 text-muted-foreground">The site you're looking for doesn't exist.</p>
+        <p className="mt-2 text-muted-foreground">The site you&apos;re looking for doesn&apos;t exist.</p>
       </div>
     );
   }
-
-  const checks = site.monitor ? getMonitorChecks(site.monitor.id) : [];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
@@ -44,7 +58,7 @@ export function SiteDetail({ siteId }: SiteDetailProps) {
           <LlmsPreview llmsTxt={site.lastCrawl?.llmsTxt ?? ""} isRecrawling={isRecrawling} onRecrawl={handleRecrawl} />
         </div>
         <div className="lg:col-span-2 space-y-6">
-          <MonitorPanel checks={checks} />
+          <MonitorPanel checks={site.checks} />
         </div>
       </div>
     </div>
