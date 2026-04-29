@@ -60,6 +60,23 @@ export async function GET(
         }
       : null;
 
+    let checks: { id: string; monitorId: string; checkedAt: string; hasChanges: boolean; diff: unknown }[] = [];
+    if (monitor) {
+      const { rows: checkRows } = await query(
+        `SELECT id, monitor_id, checked_at, has_changes, diff
+         FROM monitor_check WHERE monitor_id = $1
+         ORDER BY checked_at DESC LIMIT 50`,
+        [monitor.id]
+      );
+      checks = checkRows.map((c) => ({
+        id: c.id,
+        monitorId: c.monitor_id,
+        checkedAt: c.checked_at,
+        hasChanges: c.has_changes,
+        diff: c.diff,
+      }));
+    }
+
     return NextResponse.json({
       id: site.id,
       url: site.url,
@@ -69,7 +86,7 @@ export async function GET(
       updatedAt: site.updated_at,
       lastCrawl,
       monitor,
-      checks: [],
+      checks,
     });
   } catch (err) {
     console.error("[GET /api/sites/[id]]", err);

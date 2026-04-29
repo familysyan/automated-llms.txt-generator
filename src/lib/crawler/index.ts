@@ -3,6 +3,7 @@ import { fetchPage } from "./fetcher";
 import { parsePage } from "./parser";
 import { loadRobots } from "./robots";
 import { generateLlmsTxt } from "@/lib/generator";
+import { scheduleMonitor } from "@/lib/monitor/scheduler";
 
 const CONCURRENCY_LIMIT = 5;
 
@@ -135,6 +136,23 @@ export async function executeCrawl(payload: CrawlJobPayload) {
 
     const llmsTxt = await generateLlmsTxt(crawlId);
     await query("UPDATE crawl SET llms_txt = $1 WHERE id = $2", [llmsTxt, crawlId]);
+
+    // Auto-create a daily monitor if one doesn't exist yet
+    const siteId = crawlSite[0]?.site_id;
+    if (siteId) {
+      const { rows: existingMonitor } = await query(
+        "SELECT id FROM monitor WHERE site_id = $1",
+        [siteId]
+      );
+      if (existingMonitor.length === 0) {
+        const monitorId = crypto.randomUUID();
+        await query(
+          "INSERT INTO monitor (id, site_id) VALUES ($1, $2)",
+          [monitorId, siteId]
+        );
+        await scheduleMonitor({ id: monitorId, siteId, interval: "daily", siteUrl: seedUrl });
+      }
+    }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error(`[crawl] fatal error for ${crawlId}:`, message);
