@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const { rows } = await query(`
       SELECT m.id, m.site_id, m.active, m.interval, m.last_check_at, m.last_change_at,
-             m.webhook_url, m.created_at,
+             m.created_at,
              s.url AS site_url, s.name AS site_name
       FROM monitor m
       JOIN site s ON s.id = m.site_id
@@ -21,7 +21,6 @@ export async function GET() {
         interval: r.interval,
         lastCheckAt: r.last_check_at,
         lastChangeAt: r.last_change_at,
-        webhookUrl: r.webhook_url,
         createdAt: r.created_at,
         site: { url: r.site_url, name: r.site_name },
       }))
@@ -37,7 +36,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { siteId, interval = "daily", webhookUrl = null } = await req.json();
+    const { siteId, interval = "daily" } = await req.json();
 
     if (!siteId) {
       return NextResponse.json({ error: "siteId is required." }, { status: 400 });
@@ -68,9 +67,9 @@ export async function POST(req: Request) {
 
     const id = crypto.randomUUID();
     await query(
-      `INSERT INTO monitor (id, site_id, interval, webhook_url)
-       VALUES ($1, $2, $3, $4)`,
-      [id, siteId, interval, webhookUrl]
+      `INSERT INTO monitor (id, site_id, interval)
+       VALUES ($1, $2, $3)`,
+      [id, siteId, interval]
     );
 
     await scheduleMonitor({
@@ -81,7 +80,7 @@ export async function POST(req: Request) {
     });
 
     const { rows: monitorRows } = await query(
-      `SELECT id, site_id, active, interval, last_check_at, last_change_at, webhook_url, created_at
+      `SELECT id, site_id, active, interval, last_check_at, last_change_at, created_at
        FROM monitor WHERE id = $1`,
       [id]
     );
@@ -95,7 +94,6 @@ export async function POST(req: Request) {
         interval: m.interval,
         lastCheckAt: m.last_check_at,
         lastChangeAt: m.last_change_at,
-        webhookUrl: m.webhook_url,
         createdAt: m.created_at,
       },
       { status: 201 }

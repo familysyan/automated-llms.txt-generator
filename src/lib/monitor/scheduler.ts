@@ -3,7 +3,6 @@ import { getBoss } from "@/lib/boss";
 import { QUEUES, type MonitorCheckPayload } from "@/lib/jobs/queues";
 import { executeCrawl } from "@/lib/crawler";
 import { computeDiff } from "./diff";
-import { sendWebhook } from "./notifier";
 
 const CRON_MAP: Record<string, string> = {
   hourly: "0 * * * *",
@@ -56,8 +55,8 @@ export async function removeMonitorSchedule(monitorId: string) {
 export async function executeMonitorCheck(payload: MonitorCheckPayload) {
   const { monitorId, siteId, url } = payload;
 
-  const { rows: monitorRows } = await query<{ id: string; active: boolean; webhook_url: string | null }>(
-    "SELECT id, active, webhook_url FROM monitor WHERE id = $1",
+  const { rows: monitorRows } = await query<{ id: string; active: boolean }>(
+    "SELECT id, active FROM monitor WHERE id = $1",
     [monitorId]
   );
   const monitor = monitorRows[0];
@@ -133,13 +132,4 @@ export async function executeMonitorCheck(payload: MonitorCheckPayload) {
     [checkId, monitorId, crawlId, hasChanges, diff ? JSON.stringify(diff) : null]
   );
 
-  if (hasChanges && monitor.webhook_url) {
-    await sendWebhook(monitor.webhook_url, {
-      siteId,
-      monitorId,
-      crawlId,
-      changes: diff,
-      llmsTxt: completedCrawl.llms_txt,
-    });
-  }
 }

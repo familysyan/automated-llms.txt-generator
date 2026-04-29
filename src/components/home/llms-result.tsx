@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, Download, RefreshCw, Bell } from "lucide-react";
+import { Copy, Download, RefreshCw, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 interface LlmsResultProps {
@@ -59,9 +59,9 @@ export function LlmsResult({ url, llmsTxt, pagesFound, elapsed, onRecrawl }: Llm
             </Button>
             <div className="flex-1" />
             <Link href="/dashboard">
-              <Button size="sm">
-                <Bell className="h-4 w-4" />
+              <Button variant="outline" size="sm">
                 Dashboard
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>

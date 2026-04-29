@@ -42,7 +42,7 @@ export async function GET(
       : null;
 
     const { rows: monitorRows } = await query(
-      `SELECT id, site_id, active, interval, last_check_at, last_change_at, webhook_url, created_at
+      `SELECT id, site_id, active, interval, last_check_at, last_change_at, created_at
        FROM monitor WHERE site_id = $1`,
       [id]
     );
@@ -55,7 +55,6 @@ export async function GET(
           interval: monitorRows[0].interval,
           lastCheckAt: monitorRows[0].last_check_at,
           lastChangeAt: monitorRows[0].last_change_at,
-          webhookUrl: monitorRows[0].webhook_url,
           createdAt: monitorRows[0].created_at,
         }
       : null;

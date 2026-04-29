@@ -41,7 +41,6 @@ export interface Monitor {
   interval: "hourly" | "daily" | "weekly";
   lastCheckAt: string | null;
   lastChangeAt: string | null;
-  webhookUrl: string | null;
   createdAt: string;
 }
 

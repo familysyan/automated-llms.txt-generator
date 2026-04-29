@@ -10,7 +10,7 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const { active, interval, webhookUrl } = body;
+    const { active, interval } = body;
 
     const { rows: existing } = await query<{ id: string }>(
       "SELECT id FROM monitor WHERE id = $1",
@@ -39,11 +39,6 @@ export async function PATCH(
       setClauses.push(`interval = $${idx++}`);
       values.push(interval);
     }
-    if (webhookUrl !== undefined) {
-      setClauses.push(`webhook_url = $${idx++}`);
-      values.push(webhookUrl);
-    }
-
     if (setClauses.length === 0) {
       return NextResponse.json({ error: "No fields to update." }, { status: 400 });
     }
@@ -57,10 +52,10 @@ export async function PATCH(
     const { rows } = await query<{
       id: string; site_id: string; active: boolean; interval: string;
       last_check_at: string | null; last_change_at: string | null;
-      webhook_url: string | null; created_at: string;
+      created_at: string;
     }>(
       `SELECT m.id, m.site_id, m.active, m.interval, m.last_check_at, m.last_change_at,
-              m.webhook_url, m.created_at
+              m.created_at
        FROM monitor m WHERE m.id = $1`,
       [id]
     );
@@ -87,7 +82,6 @@ export async function PATCH(
       interval: m.interval,
       lastCheckAt: m.last_check_at,
       lastChangeAt: m.last_change_at,
-      webhookUrl: m.webhook_url,
       createdAt: m.created_at,
     });
   } catch (err) {

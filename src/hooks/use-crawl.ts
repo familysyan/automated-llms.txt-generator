@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import type { CrawlProgressEvent, Crawl } from "@/types";
 
@@ -17,6 +18,7 @@ interface CrawlState {
 }
 
 export function useCrawl() {
+  const queryClient = useQueryClient();
   const [state, setState] = useState<CrawlState>({
     crawlId: null,
     pages: [],
@@ -84,6 +86,7 @@ export function useCrawl() {
           elapsed,
           result: crawl,
         }));
+        queryClient.invalidateQueries({ queryKey: ["sites"] });
       });
 
       es.addEventListener("error", () => {

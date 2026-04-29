@@ -10,7 +10,7 @@ export async function GET() {
         c.completed_at AS crawl_completed_at, c.started_at AS crawl_started_at,
         m.id AS monitor_id, m.active AS monitor_active, m.interval AS monitor_interval,
         m.last_check_at AS monitor_last_check_at, m.last_change_at AS monitor_last_change_at,
-        m.webhook_url AS monitor_webhook_url, m.created_at AS monitor_created_at
+        m.created_at AS monitor_created_at
       FROM site s
       LEFT JOIN LATERAL (
         SELECT * FROM crawl WHERE site_id = s.id ORDER BY started_at DESC LIMIT 1
@@ -46,7 +46,6 @@ export async function GET() {
             interval: row.monitor_interval,
             lastCheckAt: row.monitor_last_check_at,
             lastChangeAt: row.monitor_last_change_at,
-            webhookUrl: row.monitor_webhook_url,
             createdAt: row.monitor_created_at,
           }
         : null,
