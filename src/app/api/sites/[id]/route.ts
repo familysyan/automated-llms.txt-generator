@@ -1,38 +1,107 @@
 import { NextResponse } from "next/server";
-import { getSiteById, getMonitorChecks } from "@/lib/fake-data";
+import { query } from "@/lib/db";
 
-// TODO: replace with real DB query
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const site = getSiteById(id);
-  if (!site) {
+
+  try {
+    const { rows: siteRows } = await query(
+      "SELECT id, url, name, description, created_at, updated_at FROM site WHERE id = $1",
+      [id]
+    );
+
+    if (siteRows.length === 0) {
+      return NextResponse.json(
+        { error: "The requested resource was not found." },
+        { status: 404 }
+      );
+    }
+
+    const site = siteRows[0];
+
+    const { rows: crawlRows } = await query(
+      `SELECT id, site_id, status, pages_found, started_at, completed_at, llms_txt
+       FROM crawl WHERE site_id = $1 ORDER BY started_at DESC LIMIT 1`,
+      [id]
+    );
+
+    const lastCrawl = crawlRows[0]
+      ? {
+          id: crawlRows[0].id,
+          siteId: crawlRows[0].site_id,
+          status: crawlRows[0].status,
+          pagesFound: crawlRows[0].pages_found,
+          startedAt: crawlRows[0].started_at,
+          completedAt: crawlRows[0].completed_at,
+          llmsTxt: crawlRows[0].llms_txt,
+          pages: [],
+        }
+      : null;
+
+    const { rows: monitorRows } = await query(
+      `SELECT id, site_id, active, interval, last_check_at, last_change_at, webhook_url, created_at
+       FROM monitor WHERE site_id = $1`,
+      [id]
+    );
+
+    const monitor = monitorRows[0]
+      ? {
+          id: monitorRows[0].id,
+          siteId: monitorRows[0].site_id,
+          active: monitorRows[0].active,
+          interval: monitorRows[0].interval,
+          lastCheckAt: monitorRows[0].last_check_at,
+          lastChangeAt: monitorRows[0].last_change_at,
+          webhookUrl: monitorRows[0].webhook_url,
+          createdAt: monitorRows[0].created_at,
+        }
+      : null;
+
+    return NextResponse.json({
+      id: site.id,
+      url: site.url,
+      name: site.name,
+      description: site.description,
+      createdAt: site.created_at,
+      updatedAt: site.updated_at,
+      lastCrawl,
+      monitor,
+      checks: [],
+    });
+  } catch (err) {
+    console.error("[GET /api/sites/[id]]", err);
     return NextResponse.json(
-      { error: "The requested resource was not found." },
-      { status: 404 }
+      { error: "Something went wrong. Please try again later." },
+      { status: 500 }
     );
   }
-
-  const checks = site.monitor ? getMonitorChecks(site.monitor.id) : [];
-
-  return NextResponse.json({ ...site, checks });
 }
 
-// TODO: replace with real DB delete
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const site = getSiteById(id);
-  if (!site) {
+
+  try {
+    const { rowCount } = await query("DELETE FROM site WHERE id = $1", [id]);
+
+    if (rowCount === 0) {
+      return NextResponse.json(
+        { error: "The requested resource was not found." },
+        { status: 404 }
+      );
+    }
+
+    return new Response(null, { status: 204 });
+  } catch (err) {
+    console.error("[DELETE /api/sites/[id]]", err);
     return NextResponse.json(
-      { error: "The requested resource was not found." },
-      { status: 404 }
+      { error: "Something went wrong. Please try again later." },
+      { status: 500 }
     );
   }
-
-  return new Response(null, { status: 204 });
 }

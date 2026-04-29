@@ -60,7 +60,10 @@ export function useCrawl() {
 
       es.addEventListener("page", (e) => {
         const page: CrawlProgressEvent = JSON.parse(e.data);
-        setState((prev) => ({ ...prev, pages: [...prev.pages, page] }));
+        setState((prev) => {
+          if (prev.pages.some((p) => p.url === page.url)) return prev;
+          return { ...prev, pages: [...prev.pages, page] };
+        });
       });
 
       es.addEventListener("progress", (e) => {
