@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { toast } from "sonner";
 import { getSiteById, getMonitorChecks } from "@/lib/fake-data";
 import { LlmsPreview } from "./llms-preview";
 import { MonitorPanel } from "./monitor-panel";
@@ -10,6 +12,15 @@ interface SiteDetailProps {
 
 export function SiteDetail({ siteId }: SiteDetailProps) {
   const site = getSiteById(siteId);
+  const [isRecrawling, setIsRecrawling] = useState(false);
+
+  const handleRecrawl = () => {
+    setIsRecrawling(true);
+    setTimeout(() => {
+      setIsRecrawling(false);
+      toast.success("Crawl completed");
+    }, 2000);
+  };
 
   if (!site) {
     return (
@@ -30,10 +41,10 @@ export function SiteDetail({ siteId }: SiteDetailProps) {
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <LlmsPreview llmsTxt={site.lastCrawl?.llmsTxt ?? ""} />
+          <LlmsPreview llmsTxt={site.lastCrawl?.llmsTxt ?? ""} isRecrawling={isRecrawling} onRecrawl={handleRecrawl} />
         </div>
         <div className="lg:col-span-2 space-y-6">
-          <MonitorPanel site={site} checks={checks} />
+          <MonitorPanel checks={checks} />
         </div>
       </div>
     </div>

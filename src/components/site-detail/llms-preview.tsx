@@ -5,13 +5,15 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Copy, Download, RefreshCw } from "lucide-react";
+import { Copy, Download, RefreshCw, Loader2 } from "lucide-react";
 
 interface LlmsPreviewProps {
   llmsTxt: string;
+  isRecrawling?: boolean;
+  onRecrawl?: () => void;
 }
 
-export function LlmsPreview({ llmsTxt }: LlmsPreviewProps) {
+export function LlmsPreview({ llmsTxt, isRecrawling, onRecrawl }: LlmsPreviewProps) {
   const [text, setText] = useState(llmsTxt);
 
   const handleCopy = async () => {
@@ -40,9 +42,9 @@ export function LlmsPreview({ llmsTxt }: LlmsPreviewProps) {
           <Download className="h-4 w-4" />
           Download
         </Button>
-        <Button variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4" />
-          Re-crawl
+        <Button variant="outline" size="sm" disabled={isRecrawling} onClick={onRecrawl}>
+          {isRecrawling ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          {isRecrawling ? "Crawling…" : "Re-crawl"}
         </Button>
       </CardHeader>
       <CardContent className="pt-4">
