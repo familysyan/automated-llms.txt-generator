@@ -1,6 +1,6 @@
 # Profound
 
-Next.js app with PostgreSQL (Docker).
+Next.js app with PostgreSQL (Docker for local development, Neon on Vercel for production).
 
 ## Setup
 
@@ -31,6 +31,16 @@ npm start
 
 Runs the Next.js production server. Does not start Docker or run migrations — ensure the DB is already running.
 
+## Deploy
+
+```bash
+npm run deploy
+```
+
+Runs production migrations against Vercel `DATABASE_URL` and then deploys to Vercel production.
+
+Production URL: https://project-rfd8u.vercel.app
+
 ## Database Migrations
 
 Migrations live in `migrate/` as numbered directories, each with `up.sql` and `down.sql`.
@@ -49,6 +59,12 @@ Apply all pending migrations:
 
 ```bash
 npm run db:migrate
+```
+
+Apply all pending migrations to production (remote Postgres via Vercel env):
+
+```bash
+npm run db:migrate:remote
 ```
 
 Check status:

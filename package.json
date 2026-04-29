@@ -8,11 +8,13 @@
     "db:migrate": "bash migrate/run.sh up",
     "db:migrate:status": "bash migrate/run.sh status",
     "db:migrate:down": "bash migrate/run.sh down",
+    "db:migrate:remote": "vercel env pull .env.production.local --environment production && set -a && . ./.env.production.local && set +a && node migrate/run-remote.mjs",
     "db:clean": "docker exec profound-postgres-1 psql -U profound -d profound -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' && bash migrate/run.sh up",
     "dev": "docker compose up -d --wait && bash migrate/run.sh up && next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy": "npm run db:migrate:remote && vercel deploy --prod"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.12",
